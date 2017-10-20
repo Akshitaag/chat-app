@@ -1,8 +1,34 @@
 var socket=io();
+	function scrollToBottom () {
+  // Selectors
+  var messages = jQuery('#messages');
+  var newMessage = messages.children('li:last-child')
+  // Heights
+  var clientHeight = messages.prop('clientHeight');
+  var scrollTop = messages.prop('scrollTop');
+  var scrollHeight = messages.prop('scrollHeight');
+  var newMessageHeight = newMessage.innerHeight();
+  var lastMessageHeight = newMessage.prev().innerHeight();
+
+  if (clientHeight + scrollTop + newMessageHeight + lastMessageHeight >= scrollHeight) {
+    messages.scrollTop(scrollHeight);
+  }
+}
 
 	socket.on('connect',function(){
-		console.log("lol");
+		var params=jQuery.deparam(window.location.search);
 
+		socket.emit('join',params,function(err){
+				if(err)
+				{
+					alert(err);
+					window.location.href='/';
+				}
+				else
+				{
+					console.log("no err");
+				}
+		});
 		
 });
 	socket.on('disconnect',function() {
@@ -10,18 +36,23 @@ var socket=io();
 	});
 	socket.on('newMessage',function(message){
 		//console.log("Message is");
+		var formatdate=moment(message.createdAt).format('h:mm a');
 		console.log(message);
-		var li=jQuery('<li></li>');
-		li.text(message.from+":"+message.text);
+		var li=jQuery('<li class="message"></li>');
+		li.html("<div class='message__title'> <h4>"+message.from+"</h4> <span>"+formatdate+" </span> </div>"+" <div class='message__body'> <p> "+ message.text +" </p> </div>");
 		jQuery('#messages').append(li);
+		scrollToBottom () ;
 	});
 	socket.on('newLocationMessage',function(message){
-		var li=jQuery('<li></li>');
-		var a=jQuery('<a target="_blank">Location</a>');
-		li.text(message.from+":");
+		var formatdate=moment(message.createdAt).format('h:mm a');
+		var li=jQuery('<li class="message"></li>');
+		var a=jQuery('<a target="_blank">My current Location</a>');
+		li.html("<div class='message__title'> <h4>"+message.from+"</h4> <span>"+formatdate+" </span> </div>");
 		a.attr('href',message.url);
+		//a.html(" <div class='message__body'> <p> "+ Location +" </p> </div>")
 		li.append(a);
 		jQuery('#messages').append(li);
+		scrollToBottom () ;
 	});
 	// socket.emit('createMessage',{
 	// 	from: "aggarwalakshita1@gmail.com",
